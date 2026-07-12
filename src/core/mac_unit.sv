@@ -12,13 +12,26 @@ parameter ACCUM_WIDTH = 21
         output logic  signed [(DATA_WIDTH-1):0]b_out,
         output logic  signed [ACCUM_WIDTH-1:0] accum_out
     );
-    
-    
-  always_ff @(posedge clk or negedge rst_n)
+    logic signed [(2*DATA_WIDTH)-1:0] product;
+
+booth_multiplier #(
+    .DATA_WIDTH(DATA_WIDTH)
+) u_booth_multiplier (
+    .multiplicand(a_in),
+    .multiplier(b_in),
+    .product(product)
+);
+  always@(posedge clk or negedge rst_n)
   begin
-    if(!rst_n || clear)
+    if(!rst_n)
     begin
       a_out<= '0;
+      b_out<= '0;
+      accum_out<= '0;
+    end
+    else if(clear)
+    begin
+       a_out<= '0;
       b_out<= '0;
       accum_out<= '0;
     end
@@ -26,7 +39,7 @@ parameter ACCUM_WIDTH = 21
       begin
         a_out<=a_in;
         b_out<=b_in;
-      accum_out<=accum_out +ACCUM_WIDTH'(a_in*b_in);    //removes ambiguity and extends result to 21 bit signed
+      accum_out<=accum_out +ACCUM_WIDTH'(product);    //removes ambiguity and extends result to 21 bit signed
       end
     end
 
